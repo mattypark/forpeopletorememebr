@@ -19,6 +19,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "emblor": "^1.4.8",
+    "framer-motion": "^12.42.0",
     "fuse.js": "^7.4.2",
     "lucide-react": "^0.511.0",
     "next": "latest",
