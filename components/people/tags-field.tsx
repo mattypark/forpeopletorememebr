@@ -47,7 +47,7 @@ export function TagsField({ value, onChange }: TagsFieldProps) {
               <button
                 type="button"
                 onClick={() => removeTag(tag)}
-                className="rounded-full p-0.5 hover:bg-foreground/10"
+                className="rounded-full p-1 transition-colors hover:bg-foreground/10"
                 aria-label={`Remove ${tag}`}
               >
                 <X size={12} />

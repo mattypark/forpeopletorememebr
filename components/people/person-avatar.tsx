@@ -27,7 +27,7 @@ export function PersonAvatar({
         alt={name}
         width={size}
         height={size}
-        className={`rounded-full object-cover ${className ?? ""}`}
+        className={`rounded-full object-cover ring-1 ring-black/10 dark:ring-white/10 ${className ?? ""}`}
         style={{ width: size, height: size }}
         unoptimized
       />
@@ -36,7 +36,7 @@ export function PersonAvatar({
 
   return (
     <span
-      className={`inline-flex overflow-hidden rounded-full ${className ?? ""}`}
+      className={`inline-flex overflow-hidden rounded-full ring-1 ring-black/10 dark:ring-white/10 ${className ?? ""}`}
       style={{ width: size, height: size }}
       aria-hidden
     >

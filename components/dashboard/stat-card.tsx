@@ -23,7 +23,7 @@ export function StatCard({ label, value, hint, accent }: StatCardProps) {
   }, [value]);
 
   return (
-    <div className="rounded-xl border border-border bg-card p-5">
+    <div className="rounded-xl border border-border bg-card p-5 transition-colors duration-200 ease-out hover:border-foreground/15 animate-in fade-in slide-in-from-bottom-2 duration-500">
       <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
         {label}
       </p>
