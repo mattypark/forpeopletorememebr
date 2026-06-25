@@ -6,6 +6,11 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { personInputSchema, type PersonInput } from "./types";
 import { enrichPerson, type EnrichSuggestion } from "./enrich";
+import {
+  researchPerson,
+  type ResearchMessage,
+  type ResearchResult,
+} from "./research";
 
 const AVATAR_BUCKET = "avatars";
 
@@ -114,6 +119,33 @@ export async function enrichPersonAction(input: {
     return {
       error: err instanceof Error ? err.message : "Enrichment failed",
       suggestion: null,
+    };
+  }
+}
+
+export interface ResearchState extends ResearchResult {
+  error: string | null;
+}
+
+export async function researchChatAction(
+  messages: ResearchMessage[],
+): Promise<ResearchState> {
+  const supabase = await createClient();
+  await requireUserId(supabase);
+
+  if (!Array.isArray(messages) || messages.length === 0) {
+    return { reply: "", draft: null, sources: [], error: "Say something to start." };
+  }
+
+  try {
+    const result = await researchPerson(messages.slice(-12));
+    return { ...result, error: null };
+  } catch (err) {
+    return {
+      reply: "",
+      draft: null,
+      sources: [],
+      error: err instanceof Error ? err.message : "Research failed",
     };
   }
 }

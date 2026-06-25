@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   Users,
+  Sparkles,
   Github,
   Linkedin,
   Twitter,
@@ -28,6 +29,7 @@ interface NavItem {
 const NAV: NavItem[] = [
   { href: "/people", label: "Overview", icon: LayoutDashboard, exact: true },
   { href: "/people/all", label: "People", icon: Users },
+  { href: "/people/research", label: "Research", icon: Sparkles },
   { href: "/people/network/github", label: "GitHub", icon: Github },
   { href: "/people/network/linkedin", label: "LinkedIn", icon: Linkedin },
   { href: "/people/network/x", label: "X", icon: Twitter },

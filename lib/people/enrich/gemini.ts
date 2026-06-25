@@ -30,6 +30,86 @@ function extractText(json: unknown): string {
   return trimmed;
 }
 
+export interface GroundingSource {
+  title: string;
+  url: string;
+}
+
+export interface GroundedResult {
+  text: string;
+  sources: GroundingSource[];
+}
+
+export interface ChatTurn {
+  role: "user" | "model";
+  parts: Array<{ text: string }>;
+}
+
+const GROUNDED_MODELS = ["gemini-2.5-flash", "gemini-2.0-flash"];
+
+/**
+ * Calls Gemini with the Google Search tool so answers are grounded in live web
+ * results, and returns the cited sources. Used by the research agent.
+ */
+export async function generateGrounded(
+  contents: ChatTurn[],
+  system?: string,
+): Promise<GroundedResult | null> {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) return null;
+
+  const payload: Record<string, unknown> = {
+    contents,
+    tools: [{ google_search: {} }],
+    generationConfig: { temperature: 0.3, maxOutputTokens: 2048 },
+  };
+  if (system) payload.systemInstruction = { parts: [{ text: system }] };
+
+  for (const model of GROUNDED_MODELS) {
+    try {
+      const resp = await fetch(
+        `${ENDPOINT}/${model}:generateContent?key=${apiKey}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        },
+      );
+      if (resp.status === 429 || resp.status === 404) continue;
+      if (!resp.ok) return null;
+
+      const json = (await resp.json()) as {
+        candidates?: Array<{
+          content?: { parts?: Array<{ text?: string }> };
+          groundingMetadata?: {
+            groundingChunks?: Array<{ web?: { uri?: string; title?: string } }>;
+          };
+        }>;
+      };
+
+      const cand = json.candidates?.[0];
+      const text = (cand?.content?.parts ?? [])
+        .map((p) => p.text ?? "")
+        .join("")
+        .trim();
+
+      const sources: GroundingSource[] = (
+        cand?.groundingMetadata?.groundingChunks ?? []
+      )
+        .map((c) => ({
+          title: c.web?.title || c.web?.uri || "source",
+          url: c.web?.uri || "",
+        }))
+        .filter((s) => s.url);
+
+      return { text, sources };
+    } catch {
+      // try next model
+    }
+  }
+  return null;
+}
+
 export async function generateJson<T>(prompt: string): Promise<T | null> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return null;
