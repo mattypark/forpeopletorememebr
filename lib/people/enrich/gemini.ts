@@ -45,7 +45,9 @@ export interface ChatTurn {
   parts: Array<{ text: string }>;
 }
 
-const GROUNDED_MODELS = ["gemini-2.5-flash", "gemini-2.0-flash"];
+// 2.0-flash first: it's not a "thinking" model, so it reliably returns text
+// for grounded search instead of spending the token budget on reasoning.
+const GROUNDED_MODELS = ["gemini-2.0-flash", "gemini-2.5-flash"];
 
 /**
  * Calls Gemini with the Google Search tool so answers are grounded in live web
@@ -61,7 +63,7 @@ export async function generateGrounded(
   const payload: Record<string, unknown> = {
     contents,
     tools: [{ google_search: {} }],
-    generationConfig: { temperature: 0.3, maxOutputTokens: 2048 },
+    generationConfig: { temperature: 0.3, maxOutputTokens: 4096 },
   };
   if (system) payload.systemInstruction = { parts: [{ text: system }] };
 

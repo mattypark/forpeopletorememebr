@@ -35,7 +35,14 @@ const SYSTEM = `You are a research assistant inside a personal CRM called Rolode
 
 Use web search to find THIS SPECIFIC person. Pin down the right individual using every disambiguating detail the user gives (company, city, school, role, mutual context, handles). If the person is genuinely ambiguous, ask ONE concise clarifying question instead of guessing.
 
-Find only PUBLIC info: current role/title, company, city/location, LinkedIn URL, other real profile URLs (GitHub, X, Instagram, personal site), and a public email ONLY if clearly published. Never fabricate a URL, email, or fact — include a link only if your search actually surfaced it.
+SEARCH ONLY THESE SITES — nowhere else:
+- LinkedIn (linkedin.com)
+- GitHub (github.com)
+- Instagram (instagram.com)
+
+Use site-scoped queries (e.g. "site:linkedin.com <name> <company>"). Only return profile URLs from those three domains. Do NOT use, mention, or cite any other website. You may still use a person's company/role from these profiles to describe them.
+
+Find only PUBLIC info: current role/title, company, city/location, the three profile URLs above, and a public email ONLY if clearly shown on one of those profiles. Never fabricate a URL, email, or fact — include a link only if your search actually surfaced it on an allowed site.
 
 You CANNOT know private facts the user holds: their phone number, or where/how the user met them. Never invent these — the user fills those in themselves.
 
@@ -48,6 +55,18 @@ Always respond in two parts:
 \`\`\`
 
 Leave any unknown field as an empty string or empty array. "summary" is 1-2 neutral sentences about who they are. "tags" are 3-6 short lowercase descriptors. Only put real, found URLs in "links". Always include the json block, even if mostly empty.`;
+
+// Research is restricted to these domains; links/sources outside are dropped.
+const ALLOWED_HOSTS = ["linkedin.com", "github.com", "instagram.com"];
+
+function isAllowed(url: string): boolean {
+  try {
+    const host = new URL(url).hostname.replace(/^www\./, "");
+    return ALLOWED_HOSTS.some((d) => host === d || host.endsWith(`.${d}`));
+  } catch {
+    return false;
+  }
+}
 
 function extractDraft(text: string): { reply: string; draftRaw: unknown | null } {
   const match = text.match(/```json\s*([\s\S]*?)```/i);
@@ -83,8 +102,20 @@ export async function researchPerson(
   let draft: ResearchDraft | null = null;
   if (draftRaw) {
     const parsed = draftSchema.safeParse(draftRaw);
-    if (parsed.success) draft = parsed.data;
+    if (parsed.success) {
+      // Keep only links from the allowed sites.
+      draft = { ...parsed.data, links: parsed.data.links.filter(isAllowed) };
+    }
   }
 
-  return { reply: reply || res.text, draft, sources: res.sources };
+  const finalReply =
+    reply ||
+    res.text ||
+    "I couldn't pull anything back that time. Try adding a detail like their company, city, or a handle — or send the message again.";
+
+  return {
+    reply: finalReply,
+    draft,
+    sources: res.sources.filter((s) => isAllowed(s.url)),
+  };
 }
