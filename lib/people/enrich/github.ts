@@ -14,6 +14,7 @@ export interface GithubFacts {
   bio: string | null;
   blog: string | null;
   twitterUsername: string | null;
+  email: string | null;
 }
 
 const API = "https://api.github.com";
@@ -37,6 +38,7 @@ interface GithubUser {
   bio: string | null;
   blog: string | null;
   twitter_username: string | null;
+  email: string | null;
 }
 
 /** Pull the GitHub login out of a github.com URL, if present. */
@@ -66,6 +68,7 @@ async function getUser(login: string): Promise<GithubFacts | null> {
       bio: u.bio,
       blog: u.blog ? u.blog : null,
       twitterUsername: u.twitter_username,
+      email: u.email,
     };
   } catch {
     return null;

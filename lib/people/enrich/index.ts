@@ -16,6 +16,7 @@ export interface EnrichSuggestion {
   role: string | null;
   company: string | null;
   location: string | null;
+  email: string | null;
   links: string[];
   tags: string[];
   notes: string | null;
@@ -100,6 +101,7 @@ export async function enrichPerson(
     role: gemini?.role?.trim() || null,
     company: facts?.company?.replace(/^@/, "").trim() || null,
     location: facts?.location?.trim() || null,
+    email: facts?.email?.trim() || null,
     links: newLinks,
     tags,
     notes: gemini?.notes?.trim() || facts?.bio?.trim() || null,

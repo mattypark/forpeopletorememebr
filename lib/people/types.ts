@@ -11,6 +11,8 @@ export interface Person {
   role: string | null;
   company: string | null;
   location: string | null;
+  email: string | null;
+  phone: string | null;
   needs: string | null;
   notes: string | null;
   metContext: string | null;
@@ -36,6 +38,19 @@ export const personInputSchema = z.object({
   role: optionalText,
   company: optionalText,
   location: optionalText,
+  email: z
+    .string()
+    .trim()
+    .email("Enter a valid email")
+    .or(z.literal(""))
+    .optional()
+    .transform((v) => (v ? v : null)),
+  phone: z
+    .string()
+    .trim()
+    .max(40)
+    .optional()
+    .transform((v) => (v ? v : null)),
   needs: optionalText,
   notes: optionalText,
   metContext: optionalText,
@@ -63,6 +78,8 @@ export const personFormSchema = z.object({
   role: z.string().max(2000),
   company: z.string().max(2000),
   location: z.string().max(2000),
+  email: z.union([z.literal(""), z.string().email("Enter a valid email")]),
+  phone: z.string().max(40),
   needs: z.string().max(2000),
   notes: z.string().max(2000),
   metContext: z.string().max(2000),
@@ -81,6 +98,8 @@ export interface PersonFormValues {
   role: string;
   company: string;
   location: string;
+  email: string;
+  phone: string;
   needs: string;
   notes: string;
   metContext: string;
@@ -96,6 +115,8 @@ export function toFormValues(person?: Person | null): PersonFormValues {
     role: person?.role ?? "",
     company: person?.company ?? "",
     location: person?.location ?? "",
+    email: person?.email ?? "",
+    phone: person?.phone ?? "",
     needs: person?.needs ?? "",
     notes: person?.notes ?? "",
     metContext: person?.metContext ?? "",

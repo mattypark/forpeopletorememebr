@@ -1,6 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ExternalLink, MapPin, Pencil } from "lucide-react";
+import {
+  ArrowLeft,
+  ExternalLink,
+  Mail,
+  MapPin,
+  Pencil,
+  Phone,
+} from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -54,6 +61,31 @@ export default async function PersonPage({
           <DeleteButton id={person.id} name={person.name} />
         </div>
       </div>
+
+      {(person.email || person.phone) && (
+        <Section title="Contact">
+          <div className="flex flex-wrap gap-2">
+            {person.email && (
+              <a
+                href={`mailto:${person.email}`}
+                className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm transition-colors hover:border-foreground/20"
+              >
+                <Mail size={14} className="text-muted-foreground" />
+                {person.email}
+              </a>
+            )}
+            {person.phone && (
+              <a
+                href={`tel:${person.phone.replace(/\s+/g, "")}`}
+                className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm transition-colors hover:border-foreground/20"
+              >
+                <Phone size={14} className="text-muted-foreground" />
+                {person.phone}
+              </a>
+            )}
+          </div>
+        </Section>
+      )}
 
       {person.needs && (
         <Section title="What I need them for">

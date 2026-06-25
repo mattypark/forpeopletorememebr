@@ -13,6 +13,8 @@ interface PersonRow {
   role: string | null;
   company: string | null;
   location: string | null;
+  email: string | null;
+  phone: string | null;
   needs: string | null;
   notes: string | null;
   met_context: string | null;
@@ -32,6 +34,8 @@ function mapRow(row: PersonRow, photoUrl: string | null): Person {
     role: row.role,
     company: row.company,
     location: row.location,
+    email: row.email,
+    phone: row.phone,
     needs: row.needs,
     notes: row.notes,
     metContext: row.met_context,

@@ -28,6 +28,8 @@ function toRow(input: PersonInput) {
     role: input.role,
     company: input.company,
     location: input.location,
+    email: input.email,
+    phone: input.phone,
     needs: input.needs,
     notes: input.notes,
     met_context: input.metContext,

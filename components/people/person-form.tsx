@@ -76,6 +76,7 @@ export function PersonForm({ person }: PersonFormProps) {
       set("role", s.role ?? "", "role");
       set("company", s.company ?? "", "company");
       set("location", s.location ?? "", "location");
+      set("email", s.email ?? "", "email");
       set("notes", s.notes ?? "", "notes");
 
       const newLinks = s.links.filter((l) => !v.links.includes(l));
@@ -159,6 +160,22 @@ export function PersonForm({ person }: PersonFormProps) {
         </Field>
         <Field label="Location" error={errors.location?.message}>
           <Input {...register("location")} placeholder="San Francisco" />
+        </Field>
+        <Field label="Email" error={errors.email?.message}>
+          <Input
+            type="email"
+            inputMode="email"
+            {...register("email")}
+            placeholder="jane@acme.com"
+          />
+        </Field>
+        <Field label="Phone" error={errors.phone?.message}>
+          <Input
+            type="tel"
+            inputMode="tel"
+            {...register("phone")}
+            placeholder="+1 555 123 4567"
+          />
         </Field>
       </div>
 
