@@ -12,6 +12,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { getPerson } from "@/lib/people/queries";
+import { getActiveGoals } from "@/lib/people/goals";
+import { matchPersonToGoals } from "@/lib/people/ask";
 import { detectLink } from "@/lib/people/links";
 import { PersonAvatar } from "@/components/people/person-avatar";
 import { DeleteButton } from "@/components/people/delete-button";
@@ -22,9 +24,13 @@ export default async function PersonPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const person = await getPerson(id);
+  const [person, activeGoals] = await Promise.all([
+    getPerson(id),
+    getActiveGoals(),
+  ]);
   if (!person) notFound();
 
+  const goalHits = matchPersonToGoals(person, activeGoals);
   const subtitle = [person.role, person.company].filter(Boolean).join(" · ");
 
   return (
@@ -40,7 +46,7 @@ export default async function PersonPage({
       <div className="flex items-start gap-5">
         <PersonAvatar name={person.name} photoUrl={person.photoUrl} size={88} />
         <div className="flex-1 space-y-1">
-          <h1 className="font-serif text-3xl font-semibold tracking-tight">
+          <h1 className="font-serif text-4xl font-semibold tracking-tight sm:text-5xl">
             {person.name}
           </h1>
           {subtitle && <p className="text-muted-foreground">{subtitle}</p>}
@@ -83,6 +89,23 @@ export default async function PersonPage({
                 {person.phone}
               </a>
             )}
+          </div>
+        </Section>
+      )}
+
+      {goalHits.length > 0 && (
+        <Section title="May help with your goals">
+          <div className="flex flex-wrap gap-1.5">
+            {goalHits.map((hit) => (
+              <Link
+                key={hit.goalId}
+                href={`/people/ask?q=${encodeURIComponent(hit.title)}`}
+                className="inline-flex items-center gap-1.5 rounded-full border border-berry/30 bg-berry/5 px-3 py-1 text-xs text-foreground transition-colors hover:border-berry/60 hover:bg-berry/10"
+              >
+                <span className="inline-block h-1.5 w-1.5 rounded-full bg-berry" />
+                {hit.title}
+              </Link>
+            ))}
           </div>
         </Section>
       )}
@@ -161,7 +184,7 @@ function Section({
 }) {
   return (
     <section className="space-y-2">
-      <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+      <h2 className="kicker">
         {title}
       </h2>
       {children}

@@ -23,7 +23,7 @@ export default async function EditPersonPage({
         <ArrowLeft size={14} />
         Back
       </Link>
-      <h1 className="font-serif text-3xl font-semibold tracking-tight">
+      <h1 className="font-serif text-4xl font-semibold tracking-tight sm:text-5xl">
         Edit {person.name}
       </h1>
       <PersonForm person={person} />

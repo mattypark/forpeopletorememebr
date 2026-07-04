@@ -26,7 +26,7 @@ export default async function CalendarPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="font-serif text-3xl font-semibold tracking-tight">
+        <h1 className="font-serif text-4xl font-semibold tracking-tight sm:text-5xl">
           Calendar
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -45,7 +45,7 @@ export default async function CalendarPage() {
 
           <aside className="space-y-6">
             <div className="rounded-xl border border-border bg-card p-4">
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              <p className="kicker">
                 Where you meet people
               </p>
               {places.length === 0 ? (
@@ -67,7 +67,7 @@ export default async function CalendarPage() {
                       </div>
                       <div className="h-1.5 overflow-hidden rounded-full bg-muted">
                         <div
-                          className="h-full rounded-full bg-[#e76f51]/80"
+                          className="h-full rounded-full bg-berry/80"
                           style={{ width: `${(count / maxPlace) * 100}%` }}
                         />
                       </div>
@@ -78,7 +78,7 @@ export default async function CalendarPage() {
             </div>
 
             <div className="rounded-xl border border-border bg-card p-4">
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              <p className="kicker">
                 On the calendar
               </p>
               <p className="mt-2 font-serif text-2xl font-semibold tabular-nums">

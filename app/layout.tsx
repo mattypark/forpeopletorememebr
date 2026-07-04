@@ -9,11 +9,12 @@ const defaultUrl = process.env.VERCEL_URL
 
 export const metadata: Metadata = {
   metadataBase: new URL(defaultUrl),
-  title: "Rolodex — your people",
-  description: "A personal CRM for everyone you meet and why they matter.",
+  title: "Bery — remember everyone",
+  description:
+    "Your network, searchable by intent. Bery remembers everyone you meet and who can help with what.",
   appleWebApp: {
     capable: true,
-    title: "Rolodex",
+    title: "Bery",
     statusBarStyle: "default",
   },
 };
@@ -39,12 +40,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${fraunces.variable} font-sans antialiased`}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           {children}
         </ThemeProvider>
       </body>

@@ -108,9 +108,9 @@ export function MetCalendar({ people }: MetCalendarProps) {
                 className={cn(
                   "flex aspect-square flex-col items-center justify-center rounded-lg text-sm transition-colors",
                   count > 0
-                    ? "cursor-pointer hover:bg-[#e76f51]/10"
+                    ? "cursor-pointer hover:bg-berry/10"
                     : "text-muted-foreground/50",
-                  isSelected && "bg-[#e76f51]/15 ring-1 ring-[#e76f51]/40",
+                  isSelected && "bg-berry/15 ring-1 ring-berry/40",
                 )}
               >
                 <span className={count > 0 ? "font-medium" : undefined}>
@@ -121,7 +121,7 @@ export function MetCalendar({ people }: MetCalendarProps) {
                     {Array.from({ length: Math.min(count, 3) }).map((_, d) => (
                       <span
                         key={d}
-                        className="h-1 w-1 rounded-full bg-[#e76f51]"
+                        className="h-1 w-1 rounded-full bg-berry"
                       />
                     ))}
                   </span>

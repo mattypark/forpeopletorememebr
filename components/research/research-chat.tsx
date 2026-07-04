@@ -131,7 +131,7 @@ export function ResearchChat() {
         <div ref={threadRef} className="flex-1 space-y-4 overflow-y-auto p-4">
           {messages.length === 0 ? (
             <div className="flex h-full flex-col items-center justify-center text-center">
-              <Sparkles className="mb-3 text-[#e76f51]" size={28} />
+              <Sparkles className="mb-3 text-berry" size={28} />
               <p className="font-serif text-lg font-semibold">
                 Research a person
               </p>
@@ -156,7 +156,7 @@ export function ResearchChat() {
                   className={cn(
                     "max-w-[85%] whitespace-pre-wrap rounded-2xl px-3.5 py-2 text-sm",
                     m.role === "user"
-                      ? "bg-[#e76f51] text-white"
+                      ? "bg-berry text-berry-foreground"
                       : "bg-muted text-foreground",
                   )}
                 >
@@ -278,7 +278,7 @@ export function ResearchChat() {
               ) : (
                 <Save className="mr-1.5" size={15} />
               )}
-              Save to Rolodex
+              Save to Bery
             </Button>
           </div>
         )}

@@ -8,7 +8,7 @@ export function MetChart({ data }: { data: MetBucket[] }) {
 
   return (
     <div className="rounded-xl border border-border bg-card p-5">
-      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+      <p className="kicker">
         Met over time
       </p>
       <div className="mt-4 flex h-32 items-end gap-3">
@@ -16,7 +16,7 @@ export function MetChart({ data }: { data: MetBucket[] }) {
           <div key={i} className="flex flex-1 flex-col items-center gap-2">
             <div className="flex w-full flex-1 items-end">
               <motion.div
-                className="w-full rounded-t-md bg-[#e76f51]/80"
+                className="w-full rounded-t-md bg-berry/80"
                 initial={{ height: 0 }}
                 animate={{ height: `${(bucket.count / max) * 100}%` }}
                 transition={{ duration: 0.6, delay: i * 0.06, ease: "easeOut" }}

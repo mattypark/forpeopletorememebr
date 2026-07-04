@@ -1,8 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import Fuse from "fuse.js";
-import { Search, X } from "lucide-react";
+import { Search, Sparkles, X } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -107,9 +108,20 @@ export function PeopleBrowser({ people }: PeopleBrowserProps) {
         </div>
       )}
 
-      <p className="text-sm text-muted-foreground">
-        {results.length} {results.length === 1 ? "person" : "people"}
-      </p>
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-sm text-muted-foreground">
+          {results.length} {results.length === 1 ? "person" : "people"}
+        </p>
+        {query.trim().length > 3 && (
+          <Link
+            href={`/people/ask?q=${encodeURIComponent(query.trim())}`}
+            className="inline-flex items-center gap-1.5 text-sm text-berry underline-offset-2 hover:underline"
+          >
+            <Sparkles size={14} />
+            Ask AI instead
+          </Link>
+        )}
+      </div>
 
       {results.length === 0 ? (
         <p className="rounded-lg border border-dashed border-border py-12 text-center text-sm text-muted-foreground">

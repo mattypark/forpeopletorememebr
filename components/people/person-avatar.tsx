@@ -1,7 +1,7 @@
 import Avatar from "boring-avatars";
 import Image from "next/image";
 
-const PALETTE = ["#f4a259", "#e76f51", "#2a9d8f", "#264653", "#e9c46a"];
+const PALETTE = ["#cf2250", "#e8b04b", "#3a5a40", "#22181c", "#f2e4ce"];
 
 interface PersonAvatarProps {
   name: string;

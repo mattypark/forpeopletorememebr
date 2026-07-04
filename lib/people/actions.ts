@@ -11,6 +11,8 @@ import {
   type ResearchMessage,
   type ResearchResult,
 } from "./research";
+import { askNetwork, type AskResult } from "./ask";
+import { getPeople } from "./queries";
 
 const AVATAR_BUCKET = "avatars";
 
@@ -148,6 +150,88 @@ export async function researchChatAction(
       error: err instanceof Error ? err.message : "Research failed",
     };
   }
+}
+
+export interface AskState {
+  result: AskResult | null;
+  error: string | null;
+}
+
+/** Intent search: rank the user's own people against a need or question. */
+export async function askNetworkAction(query: string): Promise<AskState> {
+  const trimmed = typeof query === "string" ? query.trim().slice(0, 500) : "";
+  if (!trimmed) return { result: null, error: "Ask something first." };
+
+  const supabase = await createClient();
+  await requireUserId(supabase);
+
+  try {
+    const people = await getPeople();
+    const result = await askNetwork(trimmed, people);
+    return { result, error: null };
+  } catch (err) {
+    return {
+      result: null,
+      error: err instanceof Error ? err.message : "Search failed",
+    };
+  }
+}
+
+const GOAL_TITLE_MAX = 200;
+const GOAL_DETAILS_MAX = 1000;
+
+export async function createGoal(input: {
+  title: string;
+  details?: string;
+}): Promise<ActionState> {
+  const title = input?.title?.trim().slice(0, GOAL_TITLE_MAX);
+  if (!title) return { error: "Give the goal a title." };
+  const details = input.details?.trim().slice(0, GOAL_DETAILS_MAX) || null;
+
+  const supabase = await createClient();
+  const userId = await requireUserId(supabase);
+
+  const { error } = await supabase
+    .from("goals")
+    .insert({ title, details, user_id: userId });
+
+  if (error) {
+    if (error.code === "42P01") {
+      return { error: "Goals table missing — run supabase/migrations/0003_goals.sql first." };
+    }
+    return { error: error.message };
+  }
+
+  revalidatePath("/people/goals");
+  revalidatePath("/people");
+  return { error: null };
+}
+
+export async function setGoalStatus(
+  id: string,
+  status: "active" | "done",
+): Promise<ActionState> {
+  const supabase = await createClient();
+  await requireUserId(supabase);
+
+  const { error } = await supabase.from("goals").update({ status }).eq("id", id);
+  if (error) return { error: error.message };
+
+  revalidatePath("/people/goals");
+  revalidatePath("/people");
+  return { error: null };
+}
+
+export async function deleteGoal(id: string): Promise<ActionState> {
+  const supabase = await createClient();
+  await requireUserId(supabase);
+
+  const { error } = await supabase.from("goals").delete().eq("id", id);
+  if (error) return { error: error.message };
+
+  revalidatePath("/people/goals");
+  revalidatePath("/people");
+  return { error: null };
 }
 
 export async function deletePerson(id: string): Promise<void> {

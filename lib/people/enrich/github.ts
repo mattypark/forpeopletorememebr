@@ -22,7 +22,7 @@ const API = "https://api.github.com";
 function headers(): HeadersInit {
   const h: Record<string, string> = {
     Accept: "application/vnd.github+json",
-    "User-Agent": "rolodex-enrich",
+    "User-Agent": "bery-enrich",
   };
   const token = process.env.GITHUB_TOKEN;
   if (token) h.Authorization = `Bearer ${token}`;

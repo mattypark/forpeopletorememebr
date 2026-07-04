@@ -6,6 +6,7 @@ import {
   type ChatTurn,
   type GroundingSource,
 } from "./enrich/gemini";
+import { fetchPage, extractUrls } from "./enrich/scrape";
 
 export interface ResearchMessage {
   role: "user" | "assistant";
@@ -31,7 +32,7 @@ export interface ResearchResult {
   sources: GroundingSource[];
 }
 
-const SYSTEM = `You are a research assistant inside a personal CRM called Rolodex. The user describes someone they met in real life and wants their public professional details gathered.
+const SYSTEM = `You are a research assistant inside a personal CRM called Bery. The user describes someone they met in real life and wants their public professional details gathered.
 
 Use web search to find THIS SPECIFIC person. Pin down the right individual using every disambiguating detail the user gives (company, city, school, role, mutual context, handles). If the person is genuinely ambiguous, ask ONE concise clarifying question instead of guessing.
 
@@ -41,6 +42,8 @@ SEARCH ONLY THESE SITES — nowhere else:
 - Instagram (instagram.com)
 
 Use site-scoped queries (e.g. "site:linkedin.com <name> <company>"). Only return profile URLs from those three domains. Do NOT use, mention, or cite any other website. You may still use a person's company/role from these profiles to describe them.
+
+EXCEPTION — pasted links: if the user pastes any URL (a profile, or their personal website), the fetched page content will be given to you below. Read that content and extract the person's details directly from it. A pasted link may be any site the user chooses — always trust and use it, and keep it in the draft's links.
 
 Find only PUBLIC info: current role/title, company, city/location, the three profile URLs above, and a public email ONLY if clearly shown on one of those profiles. Never fabricate a URL, email, or fact — include a link only if your search actually surfaced it on an allowed site.
 
@@ -88,6 +91,28 @@ export async function researchPerson(
     parts: [{ text: m.content }],
   }));
 
+  // If the latest user message contains URLs, scrape them and feed the content.
+  const lastUser = [...messages].reverse().find((m) => m.role === "user");
+  const pastedUrls = lastUser ? extractUrls(lastUser.content) : [];
+  if (pastedUrls.length > 0) {
+    const pages = await Promise.all(pastedUrls.slice(0, 3).map(fetchPage));
+    const block = pages
+      .map((p) =>
+        p.ok
+          ? `URL: ${p.url}\nTitle: ${p.title}\nDescription: ${p.description}\nContent: ${p.text}`
+          : `URL: ${p.url}\n(${p.note})`,
+      )
+      .join("\n\n---\n\n");
+    contents.push({
+      role: "user",
+      parts: [
+        {
+          text: `Content fetched from the link(s) I pasted — use this as the primary source for this person:\n\n${block}`,
+        },
+      ],
+    });
+  }
+
   const res = await generateGrounded(contents, SYSTEM);
   if (!res) {
     return {
@@ -103,9 +128,28 @@ export async function researchPerson(
   if (draftRaw) {
     const parsed = draftSchema.safeParse(draftRaw);
     if (parsed.success) {
-      // Keep only links from the allowed sites.
+      // AI-discovered links are restricted to the allowed sites...
       draft = { ...parsed.data, links: parsed.data.links.filter(isAllowed) };
     }
+  }
+
+  // ...but links the user explicitly pasted are always kept, any site.
+  if (pastedUrls.length > 0) {
+    const empty: ResearchDraft = {
+      name: "",
+      role: "",
+      company: "",
+      location: "",
+      email: "",
+      summary: "",
+      tags: [],
+      links: [],
+    };
+    const beforeDraft = draft ?? empty;
+    draft = {
+      ...beforeDraft,
+      links: [...new Set([...beforeDraft.links, ...pastedUrls])],
+    };
   }
 
   const finalReply =

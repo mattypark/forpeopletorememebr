@@ -13,7 +13,7 @@ export default function NewPersonPage() {
         <ArrowLeft size={14} />
         Back
       </Link>
-      <h1 className="font-serif text-3xl font-semibold tracking-tight">
+      <h1 className="font-serif text-4xl font-semibold tracking-tight sm:text-5xl">
         Add a person
       </h1>
       <PersonForm />

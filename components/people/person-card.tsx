@@ -14,7 +14,7 @@ export function PersonCard({ person }: PersonCardProps) {
   return (
     <Link
       href={`/people/${person.id}`}
-      className="group flex flex-col gap-3 rounded-xl border border-border bg-card p-4 transition-[transform,box-shadow,border-color] duration-200 ease-out hover:-translate-y-0.5 hover:border-foreground/20 hover:shadow-md active:translate-y-0 active:shadow-sm motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+      className="group flex flex-col gap-3 rounded-xl border border-border bg-card p-4 transition-[transform,box-shadow,border-color] duration-200 ease-out hover:-translate-y-0.5 hover:border-berry/40 hover:shadow-md active:translate-y-0 active:shadow-sm motion-reduce:transition-none motion-reduce:hover:translate-y-0"
     >
       <div className="flex items-center gap-3">
         <PersonAvatar name={person.name} photoUrl={person.photoUrl} size={48} />

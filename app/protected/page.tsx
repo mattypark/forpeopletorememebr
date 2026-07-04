@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-// Legacy starter route — Rolodex lives at /people.
+// Legacy starter route — Bery lives at /people.
 export default function ProtectedPage() {
   redirect("/people");
 }

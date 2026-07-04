@@ -2,55 +2,63 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Bery — cream paper + ink black + strawberry accent.
+ * Light is the brand default; dark is warm charcoal, not gray.
+ */
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
-    --card: 0 0% 98.5%;
-    --card-foreground: 0 0% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 96.1%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
-    --accent: 0 0% 96.1%;
-    --accent-foreground: 0 0% 9%;
+    --background: 40 45% 96%;
+    --foreground: 20 20% 9%;
+    --card: 40 42% 98%;
+    --card-foreground: 20 20% 9%;
+    --popover: 40 42% 98%;
+    --popover-foreground: 20 20% 9%;
+    --primary: 20 20% 9%;
+    --primary-foreground: 40 45% 96%;
+    --secondary: 38 28% 90%;
+    --secondary-foreground: 20 20% 9%;
+    --muted: 38 28% 90%;
+    --muted-foreground: 25 8% 40%;
+    --accent: 38 28% 90%;
+    --accent-foreground: 20 20% 9%;
+    --berry: 349 72% 47%;
+    --berry-foreground: 40 45% 97%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 0 0% 3.9%;
-    --chart-1: 12 76% 61%;
+    --border: 36 22% 84%;
+    --input: 36 22% 84%;
+    --ring: 20 20% 9%;
+    --chart-1: 349 72% 47%;
     --chart-2: 173 58% 39%;
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
-    --radius: 0.5rem;
+    --radius: 0.75rem;
   }
   .dark {
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 7%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
+    --background: 24 12% 7%;
+    --foreground: 40 30% 92%;
+    --card: 24 11% 10%;
+    --card-foreground: 40 30% 92%;
+    --popover: 24 11% 10%;
+    --popover-foreground: 40 30% 92%;
+    --primary: 40 30% 92%;
+    --primary-foreground: 24 12% 7%;
+    --secondary: 24 9% 15%;
+    --secondary-foreground: 40 30% 92%;
+    --muted: 24 9% 15%;
+    --muted-foreground: 35 10% 62%;
+    --accent: 24 9% 15%;
+    --accent-foreground: 40 30% 92%;
+    --berry: 351 78% 58%;
+    --berry-foreground: 24 12% 7%;
+    --destructive: 0 62.8% 40%;
     --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
-    --chart-1: 220 70% 50%;
+    --border: 26 9% 18%;
+    --input: 26 9% 18%;
+    --ring: 40 30% 85%;
+    --chart-1: 351 78% 58%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
@@ -70,6 +78,14 @@
   body {
     @apply bg-background text-foreground;
   }
+  /* Cross-fade surfaces when the theme flips instead of hard-cutting. */
+  body,
+  .theme-fade {
+    transition:
+      background-color 350ms ease,
+      border-color 350ms ease,
+      color 350ms ease;
+  }
   h1,
   h2,
   h3 {
@@ -77,6 +93,44 @@
   }
   p {
     text-wrap: pretty;
+  }
+  ::selection {
+    background: hsl(var(--berry) / 0.25);
+  }
+  /* Paper grain — one fixed noise layer gives the cream real tooth. */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    pointer-events: none;
+    opacity: 0.035;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  .dark body::before {
+    opacity: 0.05;
+  }
+}
+
+/* Shared entrance for page content — compositor-only (opacity + transform). */
+@keyframes bery-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@layer utilities {
+  .animate-rise {
+    animation: bery-rise 450ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  /* Editorial kicker — the small-caps line above a serif headline. */
+  .kicker {
+    @apply text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground;
   }
 }
 

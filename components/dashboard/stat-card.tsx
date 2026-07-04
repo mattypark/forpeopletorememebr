@@ -10,6 +10,10 @@ interface StatCardProps {
   accent?: boolean;
 }
 
+/**
+ * Magazine-style stat: heavy top rule, small-caps label, oversized serif
+ * numeral. No box — the rule is the structure.
+ */
 export function StatCard({ label, value, hint, accent }: StatCardProps) {
   const [display, setDisplay] = useState(0);
 
@@ -23,13 +27,15 @@ export function StatCard({ label, value, hint, accent }: StatCardProps) {
   }, [value]);
 
   return (
-    <div className="rounded-xl border border-border bg-card p-5 transition-colors duration-200 ease-out hover:border-foreground/15 animate-in fade-in slide-in-from-bottom-2 duration-500">
-      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-        {label}
-      </p>
+    <div
+      className={`border-t-2 pt-3 animate-in fade-in slide-in-from-bottom-2 duration-500 ${
+        accent ? "border-berry" : "border-foreground"
+      }`}
+    >
+      <p className="kicker">{label}</p>
       <p
-        className={`mt-2 font-serif text-4xl font-semibold tabular-nums ${
-          accent ? "text-[#e76f51]" : ""
+        className={`mt-1.5 font-serif text-5xl font-semibold tabular-nums tracking-tight ${
+          accent ? "text-berry" : ""
         }`}
       >
         {display}

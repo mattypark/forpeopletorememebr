@@ -15,7 +15,7 @@ export default async function TagsPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="font-serif text-3xl font-semibold tracking-tight">
+        <h1 className="font-serif text-4xl font-semibold tracking-tight sm:text-5xl">
           Tags
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
