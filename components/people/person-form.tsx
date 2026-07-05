@@ -18,7 +18,7 @@ import {
 import {
   createPerson,
   updatePerson,
-  enrichPersonAction,
+  intakePersonAction,
 } from "@/lib/people/actions";
 import { TagsField } from "./tags-field";
 import { LinksField } from "./links-field";
@@ -26,9 +26,11 @@ import { PhotoField } from "./photo-field";
 
 interface PersonFormProps {
   person?: Person | null;
+  /** Pre-fill from the agent's researched draft (e.g. /people/new?draft=…). */
+  initial?: Partial<PersonFormValues> | null;
 }
 
-export function PersonForm({ person }: PersonFormProps) {
+export function PersonForm({ person, initial }: PersonFormProps) {
   const isEdit = Boolean(person);
   const [serverError, setServerError] = useState<string | null>(null);
 
@@ -42,11 +44,12 @@ export function PersonForm({ person }: PersonFormProps) {
     formState: { errors, isSubmitting },
   } = useForm<PersonFormValues>({
     resolver: zodResolver(personFormSchema),
-    defaultValues: toFormValues(person),
+    defaultValues: { ...toFormValues(person), ...(initial ?? {}) },
   });
 
   const name = watch("name");
 
+  const [description, setDescription] = useState("");
   const [enriching, startEnrich] = useTransition();
   const [enrichNote, setEnrichNote] = useState<string | null>(null);
 
@@ -54,18 +57,17 @@ export function PersonForm({ person }: PersonFormProps) {
     setEnrichNote(null);
     startEnrich(async () => {
       const v = getValues();
-      const res = await enrichPersonAction({
-        name: v.name,
-        company: v.company,
-        role: v.role,
-        links: v.links,
-      });
-      if (res.error || !res.suggestion) {
+      // Research from the description; fall back to whatever is in the form.
+      const query =
+        description.trim() ||
+        [v.name, v.role, v.company].filter(Boolean).join(", ");
+      const res = await intakePersonAction(query);
+      if (res.error || !res.result) {
         setEnrichNote(res.error ?? "Nothing found.");
         return;
       }
 
-      const s = res.suggestion;
+      const { draft, needs, metContext, usedScraper, sources } = res.result;
       const filled: string[] = [];
       const set = (key: keyof PersonFormValues, value: string, label: string) => {
         if (value && !v[key]) {
@@ -73,18 +75,21 @@ export function PersonForm({ person }: PersonFormProps) {
           filled.push(label);
         }
       };
-      set("role", s.role ?? "", "role");
-      set("company", s.company ?? "", "company");
-      set("location", s.location ?? "", "location");
-      set("email", s.email ?? "", "email");
-      set("notes", s.notes ?? "", "notes");
+      set("name", draft.name, "name");
+      set("role", draft.role, "role");
+      set("company", draft.company, "company");
+      set("location", draft.location, "location");
+      set("email", draft.email, "email");
+      set("notes", draft.summary, "notes");
+      set("needs", needs, "what you need them for");
+      set("metContext", metContext, "how you met");
 
-      const newLinks = s.links.filter((l) => !v.links.includes(l));
+      const newLinks = draft.links.filter((l) => !v.links.includes(l));
       if (newLinks.length) {
         setValue("links", [...v.links, ...newLinks], { shouldDirty: true });
         filled.push(`${newLinks.length} link${newLinks.length > 1 ? "s" : ""}`);
       }
-      const newTags = s.tags.filter((t) => !v.tags.includes(t));
+      const newTags = draft.tags.filter((t) => !v.tags.includes(t));
       if (newTags.length) {
         setValue("tags", [...v.tags, ...newTags], { shouldDirty: true });
         filled.push(`${newTags.length} tag${newTags.length > 1 ? "s" : ""}`);
@@ -92,8 +97,12 @@ export function PersonForm({ person }: PersonFormProps) {
 
       const parts = [
         filled.length ? `Filled ${filled.join(", ")}.` : "Nothing new to add.",
-        s.sources.length ? `Source: ${s.sources.join(" + ")}.` : "",
-        ...s.warnings,
+        usedScraper
+          ? "Scraped their public profiles with Scrapling."
+          : sources.length
+            ? "Found via web search."
+            : "",
+        newLinks.length ? "Verify the linked profiles are the right person." : "",
       ].filter(Boolean);
       setEnrichNote(parts.join(" "));
     });
@@ -123,16 +132,29 @@ export function PersonForm({ person }: PersonFormProps) {
         )}
       />
 
-      <div className="rounded-lg border border-dashed border-border bg-muted/30 p-3">
+      <div className="space-y-2 rounded-lg border border-dashed border-border bg-muted/30 p-3">
+        <p className="text-sm text-muted-foreground">
+          Tell the agent who they are — it researches LinkedIn, Instagram and
+          GitHub, then fills the form.
+        </p>
+        <Textarea
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="e.g. Yurii Tovarnytskyi, met him through LinkedIn, cracked SWE, YC founder in NYC…"
+          className="min-h-[60px] bg-background"
+          disabled={enriching}
+        />
         <div className="flex items-center justify-between gap-3">
-          <p className="text-sm text-muted-foreground">
-            Type a name, then let the agent pull GitHub + a profile draft.
-          </p>
+          {enrichNote ? (
+            <p className="text-xs text-muted-foreground">{enrichNote}</p>
+          ) : (
+            <span />
+          )}
           <Button
             type="button"
             variant="secondary"
             size="sm"
-            disabled={enriching || !name?.trim()}
+            disabled={enriching || (!description.trim() && !name?.trim())}
             onClick={handleEnrich}
           >
             {enriching ? (
@@ -140,12 +162,9 @@ export function PersonForm({ person }: PersonFormProps) {
             ) : (
               <Sparkles className="mr-1.5" size={14} />
             )}
-            Auto-fill with AI
+            {enriching ? "Researching…" : "Research & fill"}
           </Button>
         </div>
-        {enrichNote && (
-          <p className="mt-2 text-xs text-muted-foreground">{enrichNote}</p>
-        )}
       </div>
 
       <div className="grid gap-5 sm:grid-cols-2">

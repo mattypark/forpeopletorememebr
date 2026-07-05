@@ -12,6 +12,7 @@ import {
   type ResearchResult,
 } from "./research";
 import { askNetwork, type AskResult } from "./ask";
+import { intakePerson, type IntakeResult } from "./agent";
 import { getPeople } from "./queries";
 
 const AVATAR_BUCKET = "avatars";
@@ -147,6 +148,38 @@ export async function researchChatAction(
       reply: "",
       draft: null,
       sources: [],
+      error: err instanceof Error ? err.message : "Research failed",
+    };
+  }
+}
+
+export interface IntakeState {
+  result: IntakeResult | null;
+  error: string | null;
+}
+
+/**
+ * Web-research a described person (Gemini grounding + Scrapling sidecar) and
+ * return a draft ready to pour into the Add Person form.
+ */
+export async function intakePersonAction(
+  description: string,
+): Promise<IntakeState> {
+  const trimmed =
+    typeof description === "string" ? description.trim().slice(0, 1000) : "";
+  if (!trimmed) {
+    return { result: null, error: "Describe the person first." };
+  }
+
+  const supabase = await createClient();
+  await requireUserId(supabase);
+
+  try {
+    const result = await intakePerson(trimmed);
+    return { result, error: null };
+  } catch (err) {
+    return {
+      result: null,
       error: err instanceof Error ? err.message : "Research failed",
     };
   }
