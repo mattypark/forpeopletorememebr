@@ -1,7 +1,7 @@
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
-import type { Person } from "./types";
+import type { Person, SocialStats } from "./types";
 
 const AVATAR_BUCKET = "avatars";
 const SIGNED_URL_TTL = 60 * 60; // 1 hour
@@ -19,6 +19,11 @@ interface PersonRow {
   notes: string | null;
   met_context: string | null;
   met_at: string | null;
+  times_met: number | null;
+  met_place: string | null;
+  met_lat: number | null;
+  met_lng: number | null;
+  social_stats: SocialStats | null;
   tags: string[] | null;
   links: string[] | null;
   photo_path: string | null;
@@ -40,6 +45,11 @@ function mapRow(row: PersonRow, photoUrl: string | null): Person {
     notes: row.notes,
     metContext: row.met_context,
     metAt: row.met_at,
+    timesMet: row.times_met ?? 1,
+    metPlace: row.met_place,
+    metLat: row.met_lat,
+    metLng: row.met_lng,
+    socialStats: row.social_stats ?? {},
     tags: row.tags ?? [],
     links: row.links ?? [],
     photoPath: row.photo_path,

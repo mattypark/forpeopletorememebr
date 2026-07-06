@@ -23,6 +23,7 @@ import {
 import { TagsField } from "./tags-field";
 import { LinksField } from "./links-field";
 import { PhotoField } from "./photo-field";
+import { PlaceField } from "./place-field";
 
 interface PersonFormProps {
   person?: Person | null;
@@ -238,6 +239,35 @@ export function PersonForm({ person, initial }: PersonFormProps) {
         </Field>
         <Field label="Date met" error={errors.metAt?.message}>
           <Input type="date" {...register("metAt")} />
+        </Field>
+        <Field
+          label="Where we met"
+          error={errors.metPlace?.message}
+          hint="Start typing a place — pick a suggestion to pin them on your map."
+        >
+          <Controller
+            control={control}
+            name="metPlace"
+            render={({ field }) => (
+              <PlaceField
+                value={field.value}
+                onChange={(place, lat, lng) => {
+                  field.onChange(place);
+                  setValue("metLat", lat, { shouldDirty: true });
+                  setValue("metLng", lng, { shouldDirty: true });
+                }}
+                placeholder="Washington Square Park, NYC"
+              />
+            )}
+          />
+        </Field>
+        <Field label="Times met" error={errors.timesMet?.message}>
+          <Input
+            type="number"
+            min={1}
+            max={10000}
+            {...register("timesMet", { valueAsNumber: true })}
+          />
         </Field>
       </div>
 

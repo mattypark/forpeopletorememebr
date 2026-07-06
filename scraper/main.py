@@ -13,10 +13,12 @@ Scrapling: https://github.com/mattypark/Scrapling
 
 from __future__ import annotations
 
+import os
 import re
+import secrets
 import urllib.parse
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI, HTTPException, Request
 from pydantic import BaseModel, Field
 
 from scrapling.fetchers import Fetcher
@@ -27,6 +29,19 @@ try:  # StealthyFetcher needs camoufox — optional, used when plain fetch is bl
     HAS_STEALTH = True
 except Exception:  # pragma: no cover
     HAS_STEALTH = False
+
+# Shared-secret auth for hosted deployments. Unset (local dev) = no auth;
+# set SCRAPER_TOKEN on both this service and the Next.js app in production.
+SCRAPER_TOKEN = os.environ.get("SCRAPER_TOKEN", "").strip()
+
+
+def require_token(request: Request) -> None:
+    if not SCRAPER_TOKEN:
+        return
+    provided = request.headers.get("x-scraper-token", "")
+    if not secrets.compare_digest(provided, SCRAPER_TOKEN):
+        raise HTTPException(status_code=401, detail="invalid scraper token")
+
 
 app = FastAPI(title="Bery scraper", version="0.1.0")
 
@@ -189,7 +204,7 @@ def health() -> dict:
     return {"ok": True, "stealth": HAS_STEALTH}
 
 
-@app.post("/person")
+@app.post("/person", dependencies=[Depends(require_token)])
 def person(req: PersonRequest) -> dict:
     name = req.name.strip()
     if not name:
@@ -218,7 +233,7 @@ def person(req: PersonRequest) -> dict:
     }
 
 
-@app.post("/fetch")
+@app.post("/fetch", dependencies=[Depends(require_token)])
 def fetch(req: FetchRequest) -> dict:
     pages = [scrape_page(url) for url in req.urls[:5]]
     return {"pages": [p.model_dump() for p in pages]}

@@ -17,6 +17,7 @@ import { matchPersonToGoals } from "@/lib/people/ask";
 import { detectLink } from "@/lib/people/links";
 import { PersonAvatar } from "@/components/people/person-avatar";
 import { DeleteButton } from "@/components/people/delete-button";
+import { MetAgainButton } from "@/components/people/met-again-button";
 
 export default async function PersonPage({
   params,
@@ -64,6 +65,7 @@ export default async function PersonPage({
               Edit
             </Link>
           </Button>
+          <MetAgainButton id={person.id} timesMet={person.timesMet} />
           <DeleteButton id={person.id} name={person.name} />
         </div>
       </div>
@@ -156,10 +158,18 @@ export default async function PersonPage({
         </Section>
       )}
 
-      {(person.metContext || person.metAt) && (
+      {(person.metContext || person.metAt || person.metPlace) && (
         <Section title="How we met">
           <p className="text-sm text-foreground/90">
-            {[person.metContext, person.metAt].filter(Boolean).join(" · ")}
+            {[person.metContext, person.metPlace, person.metAt]
+              .filter(Boolean)
+              .join(" · ")}
+            {person.timesMet > 1 && (
+              <span className="text-muted-foreground">
+                {" "}
+                · met {person.timesMet} times
+              </span>
+            )}
           </p>
         </Section>
       )}

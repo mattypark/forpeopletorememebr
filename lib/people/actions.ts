@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
 import { personInputSchema, type PersonInput } from "./types";
+import { geocodePlace, suggestPlaces, type PlaceSuggestion } from "./geocode";
 import { enrichPerson, type EnrichSuggestion } from "./enrich";
 import {
   researchPerson,
@@ -13,7 +14,8 @@ import {
 } from "./research";
 import { askNetwork, type AskResult } from "./ask";
 import { intakePerson, type IntakeResult } from "./agent";
-import { getPeople } from "./queries";
+import { getPeople, getPerson } from "./queries";
+import { buildSocialStats } from "./social-stats";
 
 const AVATAR_BUCKET = "avatars";
 
@@ -42,10 +44,45 @@ function toRow(input: PersonInput) {
     notes: input.notes,
     met_context: input.metContext,
     met_at: input.metAt,
+    times_met: input.timesMet,
+    met_place: input.metPlace,
     tags: input.tags,
     links: input.links,
     photo_path: input.photoPath,
   };
+}
+
+const MIGRATION_HINT =
+  "Missing columns — run supabase/migrations/0004_meetings_map_social.sql in the Supabase SQL editor.";
+
+/**
+ * Resolve met-place coordinates: dropdown picks carry exact coords with the
+ * form; otherwise reuse previous coords for unchanged text, else geocode.
+ */
+async function metCoords(
+  input: PersonInput,
+  previous?: { met_place: string | null; met_lat: number | null; met_lng: number | null },
+): Promise<{ met_lat: number | null; met_lng: number | null }> {
+  if (!input.metPlace) return { met_lat: null, met_lng: null };
+  if (input.metLat !== null && input.metLng !== null) {
+    return { met_lat: input.metLat, met_lng: input.metLng };
+  }
+  if (previous && previous.met_place === input.metPlace) {
+    return { met_lat: previous.met_lat, met_lng: previous.met_lng };
+  }
+  const point = await geocodePlace(input.metPlace);
+  return { met_lat: point?.lat ?? null, met_lng: point?.lng ?? null };
+}
+
+/** Autocomplete for the "Where we met" field. */
+export async function suggestPlacesAction(query: string): Promise<PlaceSuggestion[]> {
+  const trimmed = typeof query === "string" ? query.trim().slice(0, 200) : "";
+  if (trimmed.length < 3) return [];
+
+  const supabase = await createClient();
+  await requireUserId(supabase);
+
+  return suggestPlaces(trimmed);
 }
 
 export async function createPerson(input: unknown): Promise<ActionState> {
@@ -57,13 +94,16 @@ export async function createPerson(input: unknown): Promise<ActionState> {
   const supabase = await createClient();
   const userId = await requireUserId(supabase);
 
+  const coords = await metCoords(parsed.data);
   const { data, error } = await supabase
     .from("people")
-    .insert({ ...toRow(parsed.data), user_id: userId })
+    .insert({ ...toRow(parsed.data), ...coords, user_id: userId })
     .select("id")
     .single();
 
-  if (error) return { error: error.message };
+  if (error) {
+    return { error: error.code === "42703" ? MIGRATION_HINT : error.message };
+  }
 
   revalidatePath("/people");
   redirect(`/people/${data.id}`);
@@ -81,16 +121,80 @@ export async function updatePerson(
   const supabase = await createClient();
   await requireUserId(supabase);
 
+  const { data: prev } = await supabase
+    .from("people")
+    .select("met_place, met_lat, met_lng")
+    .eq("id", id)
+    .maybeSingle();
+
+  const coords = await metCoords(
+    parsed.data,
+    (prev as { met_place: string | null; met_lat: number | null; met_lng: number | null } | null) ??
+      undefined,
+  );
+
   const { error } = await supabase
     .from("people")
-    .update(toRow(parsed.data))
+    .update({ ...toRow(parsed.data), ...coords })
+    .eq("id", id);
+
+  if (error) {
+    return { error: error.code === "42703" ? MIGRATION_HINT : error.message };
+  }
+
+  revalidatePath("/people");
+  revalidatePath(`/people/${id}`);
+  redirect(`/people/${id}`);
+}
+
+/** Refresh cached follower/content stats for one person (network pages). */
+export async function refreshSocialStatsAction(id: string): Promise<ActionState> {
+  const supabase = await createClient();
+  await requireUserId(supabase);
+
+  const person = await getPerson(id);
+  if (!person) return { error: "Person not found" };
+
+  const stats = await buildSocialStats(person);
+  const { error } = await supabase
+    .from("people")
+    .update({ social_stats: stats })
+    .eq("id", id);
+
+  if (error) {
+    return { error: error.code === "42703" ? MIGRATION_HINT : error.message };
+  }
+
+  revalidatePath("/people");
+  return { error: null };
+}
+
+/** One-tap "Met again" — bumps the counter from the person page. */
+export async function metAgainAction(id: string): Promise<ActionState> {
+  const supabase = await createClient();
+  await requireUserId(supabase);
+
+  const { data: row, error: readError } = await supabase
+    .from("people")
+    .select("times_met")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (readError) {
+    return { error: readError.code === "42703" ? MIGRATION_HINT : readError.message };
+  }
+
+  const current = (row as { times_met: number | null } | null)?.times_met ?? 1;
+  const { error } = await supabase
+    .from("people")
+    .update({ times_met: current + 1 })
     .eq("id", id);
 
   if (error) return { error: error.message };
 
   revalidatePath("/people");
   revalidatePath(`/people/${id}`);
-  redirect(`/people/${id}`);
+  return { error: null };
 }
 
 export interface EnrichState {

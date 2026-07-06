@@ -14,6 +14,7 @@ import {
   Twitter,
   Instagram,
   Tags,
+  MapPin,
   Plus,
   type LucideIcon,
 } from "lucide-react";
@@ -33,6 +34,7 @@ const MAIN_NAV: NavItem[] = [
   { href: "/people", label: "Overview", icon: LayoutDashboard, exact: true },
   { href: "/people/all", label: "People", icon: Users },
   { href: "/people/ask", label: "Ask", icon: MessageCircleQuestion },
+  { href: "/people/map", label: "Map", icon: MapPin },
   { href: "/people/goals", label: "Goals", icon: Target },
   { href: "/people/research", label: "Research", icon: Sparkles },
   { href: "/people/calendar", label: "Calendar", icon: CalendarDays },

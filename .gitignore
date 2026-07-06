@@ -43,3 +43,8 @@ next-env.d.ts
 
 # Graphify
 graphify-out/cache/
+
+# Python scraper sidecar
+scraper/__pycache__/
+scraper/.venv/
+*.pyc

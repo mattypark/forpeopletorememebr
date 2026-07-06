@@ -30,6 +30,13 @@ function scraperUrl(): string | null {
   return url ? url.replace(/\/$/, "") : null;
 }
 
+function scraperHeaders(): Record<string, string> {
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  const token = process.env.SCRAPER_TOKEN?.trim();
+  if (token) headers["x-scraper-token"] = token;
+  return headers;
+}
+
 export function scraperConfigured(): boolean {
   return scraperUrl() !== null;
 }
@@ -40,7 +47,7 @@ async function post<T>(path: string, body: unknown): Promise<T | null> {
   try {
     const resp = await fetch(`${base}${path}`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: scraperHeaders(),
       body: JSON.stringify(body),
       signal: AbortSignal.timeout(SCRAPE_TIMEOUT_MS),
     });
